@@ -1,13 +1,9 @@
 import os
-from time import sleep
 from tkinter import PanedWindow
 
 from app import App
 
-all_threads = list()
-
 root = App('File Manager using Tkinter')
-# from ui.images import *
 
 root.geometry('500x200')
 
@@ -55,7 +51,7 @@ from subprocess import call as file_call
 
 from ui.frame_stack import FrameStack
 
-if system() == 'win32':
+if system() == 'Windows':
     def open_file(filepath):
         if isdir(filepath):
             draw_files(filepath)
@@ -91,7 +87,6 @@ def draw_files(dir):
         stat = os.stat(joinpath(dir, name))
         s = stat[-4]
         t = stat[-2]
-        # await ee
         ee = ListLabel(content.frames[dir].window, 'dir' if s ==
                        4096 else 'file', name, datetime.utcfromtimestamp(t), s)
         ee.grid(row=r, column=0, sticky='ew')
