@@ -1,4 +1,4 @@
-from tkinter import Tk
+from tkinter import PhotoImage, Tk
 
 
 class App(Tk):
@@ -9,7 +9,7 @@ class App(Tk):
         self.minsize(min_width, min_height)
         self.iconphoto(False, PhotoImage(file='images/icon.png'))
 
-
+        # Binds F11 key to toggle fullscreen state of app
         self.bind('<Key-F11>', self.__toggleFullscreen)
 
     def __toggleFullscreen(self, event):
