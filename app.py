@@ -7,6 +7,8 @@ class App(Tk):
 
         self.title(title)
         self.minsize(min_width, min_height)
+        self.iconphoto(False, PhotoImage(file='images/icon.png'))
+
 
         self.bind('<Key-F11>', self.__toggleFullscreen)
 
