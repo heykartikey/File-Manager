@@ -32,6 +32,8 @@ class ListLabel(Frame):
             ListLabel._current = self
             ListLabel._current.child_config(bg=ListLabel._active_color)
 
+        # Changing bind tags for the child of this widget so that event could be
+        # bind easily using bind_class method
         for child in self.winfo_children():
             tags = list(child.bindtags()) or []
             tags[1] = 'ListLabel'
