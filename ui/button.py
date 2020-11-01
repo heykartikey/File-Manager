@@ -17,4 +17,6 @@ class Button(Button):
 
         super().__init__(master, kwargs)
 
+        # Let make this fire button fire event when 'Enter' key is
+        # clicked while the button is focused
         self.bind('<Key-Return>', lambda event: self.invoke())
