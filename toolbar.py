@@ -1,31 +1,7 @@
 from tkinter import Frame
 
-from ui.button import Button
 import ui.images as img
-
-
-def create_folder():
-    ...
-
-
-def cut():
-    ...
-
-
-def copy():
-    ...
-
-
-def paste():
-    ...
-
-
-def delete():
-    ...
-
-
-def rename():
-    ...
+from ui.button import Button
 
 
 class Toolbar(Frame):
@@ -35,16 +11,16 @@ class Toolbar(Frame):
         self.__draw_tools()
 
     def __draw_tools(self):
-        self.newfolder = Button(self, text='New Folder', image=img.new_folder,
-                                command=create_folder)
+        self.newfolder = Button(self, text='New Folder', image=img.new_folder)
 
-        self.cut = Button(self, text='Cut', image=img.cut, command=cut)
-        self.copy = Button(self, text='Copy', image=img.copy, command=copy)
-        self.paste = Button(self, text='Paste', image=img.paste, command=paste)
-        self.delete = Button(self, text='Delete',
-                             image=img.delete, command=delete)
-        self.rename = Button(self, text='Rename',
-                             image=img.cut, command=rename)
+        self.cut = Button(self, state='disabled', text='Cut', image=img.cut)
+        self.copy = Button(self, state='disabled', text='Copy', image=img.copy)
+        self.paste = Button(self, state='disabled',
+                            text='Paste', image=img.paste)
+        self.delete = Button(self, state='disabled',
+                             text='Delete', image=img.delete)
+        self.rename = Button(self, state='disabled',
+                             text='Rename', image=img.rename)
 
         for i, child in enumerate(self.winfo_children()):
             child.config(bg=self.cget('bg'), padx=5)
