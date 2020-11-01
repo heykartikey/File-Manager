@@ -92,9 +92,9 @@ def draw_files(dir):
         ee.grid(row=r, column=0, sticky='ew')
         r += 1
 
-    if r == 0:
-        Label(content.frames[dir].window, text="Empty Directory").pack(
-            expand=True, fill='both')
+    # if r == 0:
+    #     Label(content.frames[dir].window, text="Empty Directory").pack(
+    #         expand=True, fill='both')
 
 
 # <body-content>
@@ -173,6 +173,48 @@ cutcopy = StringVar(root, value=None, name='cutcopy')
 
 curr = None
 
+from tkinter import messagebox
+
+
+def create_folder():
+    # F.set(joinpath(os.getcwd(), ListLabel._current._name))
+    dialog = Toplevel(root)
+    dialog.title("New Folder")
+    dialog.transient(root)
+    dialog.resizable(False, False)
+
+    foldername = StringVar(root)
+    sure = BooleanVar(root, value=False)
+
+    def yes():
+        sure.set(True)
+        try:
+            os.mkdir(joinpath(os.getcwd(), foldername.get()))
+            dialog.destroy()
+        except FileExistsError:
+            messagebox.showerror("Folder already exists!",
+                                 "A folder with same name is already present in the current directory. Try entering another name")
+        except FileNotFoundError:
+            messagebox.showerror("Invalid Name!",
+                                 "A folder with same name is already present in the current directory. Try entering another name")
+
+    Entry(dialog, textvariable=foldername).pack(padx=5, pady=(5, 0))
+    Button(dialog, text='CREATE', command=yes).pack(
+        side='right', padx=5, pady=(5, 0))
+
+    dialog.grab_set()
+    root.wait_window(dialog)
+    dialog.grab_release()
+
+    stat = os.stat(joinpath(os.getcwd(), foldername.get()))
+    r = len(os.listdir())
+    if sure.get():
+        ListLabel(content.frames[os.getcwd()].window, 'dir', foldername.get(
+        ), datetime.utcfromtimestamp(stat[-2]), stat[-4]).grid(row=r + 1, column=0, sticky='ew')
+
+
+header.newfolder.config(command=create_folder)
+
 
 def cut():
     F.set(joinpath(os.getcwd(), ListLabel._current._name))
@@ -219,8 +261,8 @@ def paste():
     s = stat[-4]
     t = stat[-2]
     r = len(os.listdir())
-    if r == 1:
-        content.frames[os.getcwd()].window.winfo_children()[0].destroy()
+    # if r == 1:
+    #     content.frames[os.getcwd()].window.winfo_children()[0].destroy()
 
     ListLabel(content.frames[os.getcwd()].window, 'dir' if s ==
               4096 else 'file', os.path.basename(joinpath(os.getcwd(), os.path.basename(F.get()))), datetime.utcfromtimestamp(t), s).grid(row=r + 1, column=0, sticky='ew')
@@ -262,7 +304,8 @@ def rename_file():
         dialog.destroy()
 
     Entry(dialog, textvariable=newname).pack(padx=5, pady=(5, 0))
-    Button(dialog, command=yes).pack(side='right', padx=5, pady=(5, 0))
+    Button(dialog, text='OK', command=yes).pack(
+        side='right', padx=5, pady=(5, 0))
 
     dialog.grab_set()
     root.wait_window(dialog)
