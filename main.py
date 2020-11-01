@@ -1,11 +1,10 @@
 import os
-from tkinter import BooleanVar, Button, Entry, Frame, Label, PanedWindow, StringVar, Toplevel
+from ui.button import Button
+from tkinter import BooleanVar, Entry, Frame, PanedWindow, StringVar, Toplevel
 
 from app import App
 
 root = App('File Manager using Tkinter')
-
-root.geometry('500x200')
 
 root.grid_rowconfigure(1, weight=1)
 root.grid_columnconfigure(0, weight=1)
@@ -92,11 +91,6 @@ def draw_files(dir):
         ee.grid(row=r, column=0, sticky='ew')
         r += 1
 
-    # if r == 0:
-    #     Label(content.frames[dir].window, text="Empty Directory").pack(
-    #         expand=True, fill='both')
-
-
 # <body-content>
 
 
@@ -177,7 +171,6 @@ from tkinter import messagebox
 
 
 def create_folder():
-    # F.set(joinpath(os.getcwd(), ListLabel._current._name))
     dialog = Toplevel(root)
     dialog.title("New Folder")
     dialog.transient(root)
@@ -200,7 +193,7 @@ def create_folder():
 
     Entry(dialog, textvariable=foldername).pack(padx=5, pady=(5, 0))
     Button(dialog, text='CREATE', command=yes).pack(
-        side='right', padx=5, pady=(5, 0))
+        side='right', padx=5, pady=5)
 
     dialog.grab_set()
     root.wait_window(dialog)
@@ -261,8 +254,6 @@ def paste():
     s = stat[-4]
     t = stat[-2]
     r = len(os.listdir())
-    # if r == 1:
-    #     content.frames[os.getcwd()].window.winfo_children()[0].destroy()
 
     ListLabel(content.frames[os.getcwd()].window, 'dir' if s ==
               4096 else 'file', os.path.basename(joinpath(os.getcwd(), os.path.basename(F.get()))), datetime.utcfromtimestamp(t), s).grid(row=r + 1, column=0, sticky='ew')
@@ -305,7 +296,7 @@ def rename_file():
 
     Entry(dialog, textvariable=newname).pack(padx=5, pady=(5, 0))
     Button(dialog, text='OK', command=yes).pack(
-        side='right', padx=5, pady=(5, 0))
+        side='right', padx=5, pady=5)
 
     dialog.grab_set()
     root.wait_window(dialog)
