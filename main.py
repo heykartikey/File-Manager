@@ -20,7 +20,7 @@ header.grid(row=0, column=0, sticky='ew')
 
 # <body>
 
-body = PanedWindow(root, sashwidth=2)
+body = PanedWindow(root, sashwidth=2, bd=0)
 
 # <body-sidebar>
 
@@ -39,7 +39,7 @@ folders = [
 
 from sidebar import Sidebar
 
-sidebar = Sidebar(body, '#d9d9d9', 'orange', folders)
+sidebar = Sidebar(body, '#D9D9D9', 'orange', folders)
 body.add(sidebar)
 # </body-sidebar>
 
@@ -64,6 +64,9 @@ else:
             file_call(('xdg-open', filepath))
 
 from datetime import datetime
+utc = datetime.utcfromtimestamp
+
+from glob import glob
 
 
 def draw_files(dir):
@@ -72,6 +75,7 @@ def draw_files(dir):
         print(f'Raised {dir}')
         content.raise_frame(path)
         return
+
     os.chdir(dir)
 
     if dir in content.frames:
@@ -82,14 +86,17 @@ def draw_files(dir):
     content.push(ScrollableFrame, dir)
 
     r = 0
-    for name in os.listdir():
-        stat = os.stat(joinpath(dir, name))
-        s = stat[-4]
-        t = stat[-2]
-        ee = ListLabel(content.frames[dir].window, 'dir' if s ==
-                       4096 else 'file', name, datetime.utcfromtimestamp(t), s)
-        ee.grid(row=r, column=0, sticky='ew')
+    for name in glob('*'):
+        file_path = joinpath(dir, name)
+        size = f'{os.path.getsize(file_path)} Bytes'
+        mtime = utc(os.path.getmtime(file_path))
+        mtime = mtime.date()
+        icon_type = 'dir' if isdir(file_path) else 'file'
+        ListLabel(content.frames[dir].window, icon_type, name, mtime, size)\
+            .grid(row=r, column=0, sticky='ew')
         r += 1
+
+    print(dir, r)
 
 # <body-content>
 
@@ -105,8 +112,8 @@ cbody = Frame(root)
 cbody.grid_columnconfigure(0, weight=1)
 cbody.grid_rowconfigure(1, weight=1)
 
-ListLabel(cbody, 'dir', 'Name', 'Modification',
-          'Size', bg="#eee").grid(sticky='ew', row=0, column=0)
+ListLabel(cbody, None, 'Name', 'Modified', 'Size', bg="#999")\
+    .grid(sticky='ew', row=0, column=0)
 
 content = FrameStack(cbody)
 content.grid(sticky='nsew', row=1, column=0)
@@ -130,8 +137,8 @@ body.bind_class('SidebarLabel',
                 add=True)
 
 
-def clicked(event):
-    name = event.widget.master._name
+def double_clicked(event):
+    name = event.widget.master.name
     Thread(target=open_file, args=[joinpath(
         os.getcwd(), name)], daemon=True).start()
 
@@ -149,7 +156,7 @@ def enable_buttons(*buttons):
         button.config(state='normal')
 
 
-body.bind_class('ListLabel', '<Double-Button-1>', clicked)
+body.bind_class('ListLabel', '<Double-Button-1>', double_clicked)
 body.bind_class('ListLabel', '<Button-1>', ListLabel.change_current)
 body.bind_class('ListLabel', '<Button-1>', lambda e:
                 enable_buttons(header.cut, header.copy, header.rename, header.delete) if cutcopy.get() not in ('cut', 'copy') else None, add=True)
@@ -159,7 +166,7 @@ body.bind_class('SidebarLabel', '<Button-1>',
                 lambda e: enable_buttons(None) if cutcopy.get() not in ('cut', 'copy') else None, add=True)
 
 
-from tkinter.messagebox import askokcancel
+from tkinter.messagebox import askyesno
 from send2trash import send2trash
 
 F = StringVar(root, value=None)
@@ -210,9 +217,9 @@ header.newfolder.config(command=create_folder)
 
 
 def cut():
-    F.set(joinpath(os.getcwd(), ListLabel._current._name))
+    F.set(joinpath(os.getcwd(), ListLabel.currently_selected.name))
     global curr
-    curr = ListLabel._current
+    curr = ListLabel.currently_selected
     cutcopy.set('cut')
     enable_buttons(header.paste)
 
@@ -221,9 +228,9 @@ header.cut.config(command=cut)
 
 
 def copy():
-    F.set(joinpath(os.getcwd(), ListLabel._current._name))
+    F.set(joinpath(os.getcwd(), ListLabel.currently_selected.name))
     global curr
-    curr = ListLabel._current
+    curr = ListLabel.currently_selected
     cutcopy.set('copy')
     enable_buttons(header.paste)
 
@@ -248,7 +255,7 @@ def paste():
     (copyfile if action == 'copy' else os.rename)(
         F.get(), joinpath(os.getcwd(), os.path.basename(F.get())))
 
-    ListLabel._current = None
+    ListLabel.currently_selected = None
 
     stat = os.stat(joinpath(os.getcwd(), os.path.basename(F.get())))
     s = stat[-4]
@@ -263,24 +270,24 @@ header.paste.config(command=paste)
 
 
 def delete_file():
-    F.set(joinpath(os.getcwd(), ListLabel._current._name))
+    F.set(joinpath(os.getcwd(), ListLabel.currently_selected.name))
 
-    sure = askokcancel(
+    sure = askyesno(
         'Confirmation', 'Are you sure you want to delete this?')
-
-    enable_buttons(None)
 
     if sure:
         send2trash(F.get())
-        ListLabel._current.destroy()
-        ListLabel._current = None
+        ListLabel.currently_selected.destroy()
+        ListLabel.currently_selected = None
 
 
 header.delete.config(command=delete_file)
 
 
 def rename_file():
-    F.set(joinpath(os.getcwd(), ListLabel._current._name))
+    F.set(joinpath(os.getcwd(), ListLabel.currently_selected.name))
+
+    src, ext = os.path.splitext(os.path.basename(F.get()))
 
     dialog = Toplevel(root)
     dialog.title("Rename")
@@ -291,8 +298,25 @@ def rename_file():
     sure = BooleanVar(root, value=False)
 
     def yes():
-        sure.set(True)
-        dialog.destroy()
+        try:
+            if src == newname.get():
+                dialog.destroy()
+                return
+
+            newfile = joinpath(os.getcwd(), f'{newname.get()}{ext}')
+
+            i = 1
+            while os.path.exists(newfile):
+                newfile = joinpath(os.getcwd(), f'{newname.get()}{i}{ext}')
+                i += 1
+
+            os.rename(F.get(), newfile)
+            newname.set(os.path.basename(newfile))
+            sure.set(True)
+            dialog.destroy()
+        except IsADirectoryError:
+            messagebox.showerror("Error",
+                                 "A folder with same name already exists")
 
     Entry(dialog, textvariable=newname).pack(padx=5, pady=(5, 0))
     Button(dialog, text='OK', command=yes).pack(
@@ -303,12 +327,27 @@ def rename_file():
     dialog.grab_release()
 
     if sure.get():
-        os.rename(F.get(), joinpath(os.getcwd(), newname.get()))
-        ListLabel._current.winfo_children()[1].config(text=newname.get())
-        ListLabel._current._name = newname.get()
+        ListLabel.currently_selected.winfo_children()[1]\
+            .config(text=newname.get())
+
+        ListLabel.currently_selected.name = newname.get()
 
 
-header.rename.config(command=lambda: Thread(
-    target=rename_file, daemon=True).start())
+header.rename.config(command=rename_file)
+
+root.bind('<Control-Shift-n>', lambda e: header.newfolder.invoke())
+root.bind('<Control-Shift-N>', lambda e: header.newfolder.invoke())
+
+root.bind('<Control-x>', lambda e: header.cut.invoke())
+root.bind('<Control-X>', lambda e: header.cut.invoke())
+
+root.bind('<Control-c>', lambda e: header.copy.invoke())
+root.bind('<Control-C>', lambda e: header.copy.invoke())
+
+root.bind('<Control-v>', lambda e: header.paste.invoke())
+root.bind('<Control-V>', lambda e: header.paste.invoke())
+
+root.bind('<Delete>', lambda e: header.delete.invoke())
+root.bind('<F2>', lambda e: header.rename.invoke())
 
 root.mainloop()
