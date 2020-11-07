@@ -7,7 +7,10 @@ class App(Tk):
 
         self.title(title)
         self.minsize(min_width, min_height)
-        self.iconphoto(False, PhotoImage(file='images/icon.png'))
+
+        # first parameter is True so that all future TopLevels have the
+        # same icon as root window
+        self.iconphoto(True, PhotoImage(file='images/icon.png'))
 
         # Binds F11 key to toggle fullscreen state of app
         self.bind('<Key-F11>', self.__toggleFullscreen)
